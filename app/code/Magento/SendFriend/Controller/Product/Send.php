@@ -3,70 +3,93 @@
  * Copyright © Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
+declare(strict_types=1);
+
 namespace Magento\SendFriend\Controller\Product;
 
+use Magento\Catalog\Api\ProductRepositoryInterface;
+use Magento\Catalog\Model\Session;
+use Magento\Customer\Model\Session as CustomerSession;
 use Magento\Framework\App\Action\HttpGetActionInterface;
+use Magento\Framework\App\RequestInterface;
+use Magento\Framework\Controller\Result\Forward;
 use Magento\Framework\Controller\ResultFactory;
+use Magento\Framework\Controller\ResultInterface;
+use Magento\Framework\Data\Form\FormKey\Validator;
+use Magento\Framework\Event\ManagerInterface as EventManagerInterface;
+use Magento\Framework\Message\ManagerInterface;
+use Magento\Framework\Registry;
+use Magento\Framework\UrlInterface;
+use Magento\Framework\View\Result\Page;
+use Magento\SendFriend\Block\Send as BlockSend;
+use Magento\SendFriend\Controller\Product;
+use Magento\SendFriend\Model\ConfigInterface;
+use Magento\SendFriend\Model\SendFriend;
 
 /**
  * Controller class. Represents rendering and request flow
  */
-class Send extends \Magento\SendFriend\Controller\Product implements HttpGetActionInterface
+class Send extends Product implements HttpGetActionInterface
 {
-    /**
-     * @var \Magento\Catalog\Model\Session
-     */
-    protected $catalogSession;
 
     /**
-     * @param \Magento\Framework\App\Action\Context $context
-     * @param \Magento\Framework\Registry $coreRegistry
-     * @param \Magento\Framework\Data\Form\FormKey\Validator $formKeyValidator
-     * @param \Magento\SendFriend\Model\SendFriend $sendFriend
-     * @param \Magento\Catalog\Api\ProductRepositoryInterface $productRepository
-     * @param \Magento\Catalog\Model\Session $catalogSession
+     * @var EventManagerInterface
      */
+    protected $_eventManager;
+
     public function __construct(
-        \Magento\Framework\App\Action\Context $context,
-        \Magento\Framework\Registry $coreRegistry,
-        \Magento\Framework\Data\Form\FormKey\Validator $formKeyValidator,
-        \Magento\SendFriend\Model\SendFriend $sendFriend,
-        \Magento\Catalog\Api\ProductRepositoryInterface $productRepository,
-        \Magento\Catalog\Model\Session $catalogSession
+        Registry $coreRegistry,
+        Validator $formKeyValidator,
+        SendFriend $sendFriend,
+        ProductRepositoryInterface $productRepository,
+        UrlInterface $url,
+        ManagerInterface $messageManager,
+        RequestInterface $request,
+        ResultFactory $resultFactory,
+        Session $catalogSession,
+        ConfigInterface $sendFriendConfig,
+        CustomerSession $customerSession,
+        EventManagerInterface $eventManager
     ) {
-        $this->catalogSession = $catalogSession;
+        $this->_eventManager = $eventManager;
         parent::__construct(
-            $context,
             $coreRegistry,
             $formKeyValidator,
             $sendFriend,
-            $productRepository
+            $productRepository,
+            $catalogSession,
+            $url,
+            $messageManager,
+            $request,
+            $resultFactory,
+            $sendFriendConfig,
+            $customerSession
         );
     }
 
     /**
      * Show Send to a Friend Form
      *
-     * @return \Magento\Framework\Controller\ResultInterface
+     * @return ResultInterface
      */
     public function execute()
     {
         $product = $this->_initProduct();
 
         if (!$product) {
-            /** @var \Magento\Framework\Controller\Result\Forward $resultForward */
+            /** @var Forward $resultForward */
             $resultForward = $this->resultFactory->create(ResultFactory::TYPE_FORWARD);
             $resultForward->forward('noroute');
             return $resultForward;
         }
 
         if ($this->sendFriend->getMaxSendsToFriend() && $this->sendFriend->isExceedLimit()) {
-            $this->messageManager->addNotice(
+            $this->messageManager->addNoticeMessage(
                 __('You can\'t send messages more than %1 times an hour.', $this->sendFriend->getMaxSendsToFriend())
             );
         }
 
-        /** @var \Magento\Framework\View\Result\Page $resultPage */
+        /** @var Page $resultPage */
         $resultPage = $this->resultFactory->create(ResultFactory::TYPE_PAGE);
 
         $this->_eventManager->dispatch('sendfriend_product', ['product' => $product]);
@@ -75,7 +98,7 @@ class Send extends \Magento\SendFriend\Controller\Product implements HttpGetActi
             $this->catalogSession->setSendfriendFormData(true);
             $block = $resultPage->getLayout()->getBlock('sendfriend.send');
             if ($block) {
-                /** @var \Magento\SendFriend\Block\Send $block */
+                /** @var BlockSend $block */
                 $block->setFormData($data);
             }
         }

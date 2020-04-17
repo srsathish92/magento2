@@ -10,18 +10,23 @@ namespace Magento\SendFriend\Controller\Product;
 use Magento\Catalog\Api\CategoryRepositoryInterface;
 use Magento\Catalog\Api\ProductRepositoryInterface;
 use Magento\Catalog\Model\Session;
-use Magento\Framework\App\Action\Context;
+use Magento\Customer\Model\Session as CustomerSession;
 use Magento\Framework\App\Action\HttpPostActionInterface;
+use Magento\Framework\App\RequestInterface;
+use Magento\Framework\App\Response\RedirectInterface;
 use Magento\Framework\Controller\Result\Forward;
 use Magento\Framework\Controller\Result\Redirect;
+use Magento\Framework\Controller\ResultFactory;
 use Magento\Framework\Controller\ResultInterface;
 use Magento\Framework\Data\Form\FormKey\Validator;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Exception\NoSuchEntityException;
-use Magento\Framework\Controller\ResultFactory;
+use Magento\Framework\Message\ManagerInterface;
 use Magento\Framework\Registry;
+use Magento\Framework\UrlInterface;
 use Magento\SendFriend\Controller\Product;
 use Magento\SendFriend\Model\CaptchaValidator;
+use Magento\SendFriend\Model\ConfigInterface;
 use Magento\SendFriend\Model\SendFriend;
 
 /**
@@ -37,39 +42,47 @@ class Sendmail extends Product implements HttpPostActionInterface
     private $categoryRepository;
 
     /**
-     * @var Session
-     */
-    private $catalogSession;
-
-    /**
      * @var CaptchaValidator
      */
     private $captchaValidator;
 
     /**
-     * @param Context $context
-     * @param Registry $coreRegistry
-     * @param Validator $formKeyValidator
-     * @param SendFriend $sendFriend
-     * @param ProductRepositoryInterface $productRepository
-     * @param CategoryRepositoryInterface $categoryRepository
-     * @param Session $catalogSession
-     * @param CaptchaValidator|null $captchaValidator
+     * @var RedirectInterface
      */
+    protected $_redirect;
+
     public function __construct(
-        Context $context,
         Registry $coreRegistry,
         Validator $formKeyValidator,
         SendFriend $sendFriend,
         ProductRepositoryInterface $productRepository,
         CategoryRepositoryInterface $categoryRepository,
         Session $catalogSession,
-        CaptchaValidator $captchaValidator
+        CaptchaValidator $captchaValidator,
+        UrlInterface $url,
+        ManagerInterface $messageManager,
+        RequestInterface $request,
+        ResultFactory $resultFactory,
+        ConfigInterface $sendFriendConfig,
+        CustomerSession $customerSession,
+        RedirectInterface $redirect
     ) {
-        parent::__construct($context, $coreRegistry, $formKeyValidator, $sendFriend, $productRepository);
+        parent::__construct(
+            $coreRegistry,
+            $formKeyValidator,
+            $sendFriend,
+            $productRepository,
+            $catalogSession,
+            $url,
+            $messageManager,
+            $request,
+            $resultFactory,
+            $sendFriendConfig,
+            $customerSession
+        );
         $this->categoryRepository = $categoryRepository;
-        $this->catalogSession = $catalogSession;
         $this->captchaValidator = $captchaValidator;
+        $this->_redirect = $redirect;
     }
 
     /**

@@ -13,8 +13,8 @@ use Magento\Framework\GraphQl\Exception\GraphQlInputException;
 use Magento\Framework\GraphQl\Query\ResolverInterface;
 use Magento\Framework\GraphQl\Schema\Type\ResolveInfo;
 use Magento\GraphQl\Model\Query\ContextInterface;
-use Magento\SendFriend\Helper\Data as SendFriendHelper;
 use Magento\SendFriendGraphQl\Model\SendFriend\SendEmail;
+use Magento\SendFriend\Model\ConfigInterface;
 
 /**
  * @inheritdoc
@@ -22,9 +22,9 @@ use Magento\SendFriendGraphQl\Model\SendFriend\SendEmail;
 class SendEmailToFriend implements ResolverInterface
 {
     /**
-     * @var SendFriendHelper
+     * @var ConfigInterface
      */
-    private $sendFriendHelper;
+    private $sendFriendConfig;
 
     /**
      * @var SendEmail
@@ -33,14 +33,14 @@ class SendEmailToFriend implements ResolverInterface
 
     /**
      * @param SendEmail $sendEmail
-     * @param SendFriendHelper $sendFriendHelper
+     * @param ConfigInterface $sendFriendConfig
      */
     public function __construct(
         SendEmail $sendEmail,
-        SendFriendHelper $sendFriendHelper
+        ConfigInterface $sendFriendConfig
     ) {
         $this->sendEmail = $sendEmail;
-        $this->sendFriendHelper = $sendFriendHelper;
+        $this->sendFriendConfig = $sendFriendConfig;
     }
 
     /**
@@ -50,12 +50,12 @@ class SendEmailToFriend implements ResolverInterface
     {
         $storeId = $context->getExtensionAttributes()->getStore()->getId();
 
-        if (!$this->sendFriendHelper->isEnabled($storeId)) {
+        if (!$this->sendFriendConfig->isEnabled($storeId)) {
             throw new GraphQlInputException(__('"Email to a Friend" is not enabled.'));
         }
 
         /** @var ContextInterface $context */
-        if (!$this->sendFriendHelper->isAllowForGuest($storeId)
+        if (!$this->sendFriendConfig->isAllowForGuest($storeId)
             && false === $context->getExtensionAttributes()->getIsCustomer()
         ) {
             throw new GraphQlAuthorizationException(__('The current customer isn\'t authorized.'));

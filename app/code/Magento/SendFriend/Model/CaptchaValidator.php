@@ -3,7 +3,6 @@
  * Copyright © Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
-
 declare(strict_types=1);
 
 namespace Magento\SendFriend\Model;
@@ -15,6 +14,7 @@ use Magento\Captcha\Model\DefaultModel;
 use Magento\Captcha\Observer\CaptchaStringResolver;
 use Magento\Authorization\Model\UserContextInterface;
 use Magento\Customer\Api\CustomerRepositoryInterface;
+use Magento\Framework\Exception\NoSuchEntityException;
 
 /**
  * Class CaptchaValidator. Performs captcha validation
@@ -66,7 +66,7 @@ class CaptchaValidator
      *
      * @param RequestInterface $request
      * @throws LocalizedException
-     * @throws \Magento\Framework\Exception\NoSuchEntityException
+     * @throws NoSuchEntityException
      */
     public function validateSending(RequestInterface $request): void
     {
@@ -78,7 +78,7 @@ class CaptchaValidator
      *
      * @param RequestInterface $request
      * @throws LocalizedException
-     * @throws \Magento\Framework\Exception\NoSuchEntityException
+     * @throws NoSuchEntityException
      */
     private function validateCaptcha(RequestInterface $request): void
     {
@@ -108,7 +108,7 @@ class CaptchaValidator
      *
      * @param DefaultModel $captchaModel
      * @throws LocalizedException
-     * @throws \Magento\Framework\Exception\NoSuchEntityException
+     * @throws NoSuchEntityException
      */
     private function logCaptchaAttempt(DefaultModel $captchaModel): void
     {

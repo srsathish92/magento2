@@ -7,16 +7,14 @@ declare(strict_types=1);
 
 namespace Magento\SendFriendGraphQl\Model\SendFriend;
 
-use Magento\Catalog\Api\Data\ProductInterface;
-use Magento\Catalog\Api\ProductRepositoryInterface;
 use Magento\Framework\DataObjectFactory;
 use Magento\Framework\Event\ManagerInterface;
-use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\GraphQl\Exception\GraphQlInputException;
 use Magento\Framework\GraphQl\Exception\GraphQlNoSuchEntityException;
 use Magento\SendFriend\Model\SendFriend;
 use Magento\SendFriend\Model\SendFriendFactory;
 use Magento\SendFriendGraphQl\Model\Provider\GetVisibleProduct;
+use Magento\Framework\Exception\LocalizedException;
 
 /**
  * Send Product Email to Friend(s)
@@ -27,11 +25,6 @@ class SendEmail
      * @var DataObjectFactory
      */
     private $dataObjectFactory;
-
-    /**
-     * @var ProductRepositoryInterface
-     */
-    private $productRepository;
 
     /**
      * @var SendFriendFactory
@@ -50,21 +43,19 @@ class SendEmail
 
     /**
      * SendEmail constructor.
+     *
      * @param DataObjectFactory $dataObjectFactory
-     * @param ProductRepositoryInterface $productRepository
      * @param SendFriendFactory $sendFriendFactory
      * @param ManagerInterface $eventManager
      * @param GetVisibleProduct $visibleProductProvider
      */
     public function __construct(
         DataObjectFactory $dataObjectFactory,
-        ProductRepositoryInterface $productRepository,
         SendFriendFactory $sendFriendFactory,
         ManagerInterface $eventManager,
         GetVisibleProduct $visibleProductProvider
     ) {
         $this->dataObjectFactory = $dataObjectFactory;
-        $this->productRepository = $productRepository;
         $this->sendFriendFactory = $sendFriendFactory;
         $this->eventManager = $eventManager;
         $this->visibleProductProvider = $visibleProductProvider;
@@ -78,7 +69,7 @@ class SendEmail
      * @param array $recipientsData
      * @throws GraphQlInputException
      * @throws GraphQlNoSuchEntityException
-     * @throws \Magento\Framework\Exception\LocalizedException
+     * @throws LocalizedException
      */
     public function execute(int $productId, array $senderData, array $recipientsData): void
     {

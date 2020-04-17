@@ -3,60 +3,115 @@
  * Copyright © Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
+declare(strict_types=1);
+
 namespace Magento\SendFriend\Controller;
 
-use Magento\Framework\Exception\NotFoundException;
+use Magento\Catalog\Api\ProductRepositoryInterface;
+use Magento\Catalog\Model\Product as ProductModel;
+use Magento\Catalog\Model\Session as CatalogSession;
+use Magento\Customer\Model\Session;
+use Magento\Framework\App\ActionInterface;
 use Magento\Framework\App\RequestInterface;
+use Magento\Framework\App\ResponseInterface;
+use Magento\Framework\Controller\ResultFactory;
+use Magento\Framework\Data\Form\FormKey\Validator;
 use Magento\Framework\Exception\NoSuchEntityException;
+use Magento\Framework\Exception\NotFoundException;
+use Magento\Framework\Message\ManagerInterface;
+use Magento\Framework\Registry;
+use Magento\Framework\UrlInterface;
+use Magento\SendFriend\Model\ConfigInterface;
+use Magento\SendFriend\Model\SendFriend;
 
 /**
  * Email to a Friend Product Controller
  *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
-abstract class Product extends \Magento\Framework\App\Action\Action
+abstract class Product implements ActionInterface
 {
     /**
      * Core registry
      *
-     * @var \Magento\Framework\Registry
+     * @var Registry
      */
     protected $_coreRegistry = null;
 
     /**
-     * @var \Magento\Framework\Data\Form\FormKey\Validator
+     * @var Validator
      */
     protected $_formKeyValidator;
 
     /**
-     * @var \Magento\SendFriend\Model\SendFriend
+     * @var SendFriend
      */
     protected $sendFriend;
 
     /**
-     * @var \Magento\Catalog\Api\ProductRepositoryInterface
+     * @var ProductRepositoryInterface
      */
     protected $productRepository;
 
     /**
-     * @param \Magento\Framework\App\Action\Context $context
-     * @param \Magento\Framework\Registry $coreRegistry
-     * @param \Magento\Framework\Data\Form\FormKey\Validator $formKeyValidator
-     * @param \Magento\SendFriend\Model\SendFriend $sendFriend
-     * @param \Magento\Catalog\Api\ProductRepositoryInterface $productRepository
+     * @var CatalogSession
      */
+    protected $catalogSession;
+
+    /**
+     * @var UrlInterface
+     */
+    protected $_url;
+
+    /**
+     * @var ManagerInterface
+     */
+    protected $messageManager;
+
+    /**
+     * @var RequestInterface
+     */
+    protected $_request;
+
+    /**
+     * @var ResultFactory
+     */
+    protected $resultFactory;
+
+    /**
+     * @var ConfigInterface
+     */
+    protected $sendFriendConfig;
+
+    /**
+     * @var Session
+     */
+    protected $customerSession;
+
     public function __construct(
-        \Magento\Framework\App\Action\Context $context,
-        \Magento\Framework\Registry $coreRegistry,
-        \Magento\Framework\Data\Form\FormKey\Validator $formKeyValidator,
-        \Magento\SendFriend\Model\SendFriend $sendFriend,
-        \Magento\Catalog\Api\ProductRepositoryInterface $productRepository
+        Registry $coreRegistry,
+        Validator $formKeyValidator,
+        SendFriend $sendFriend,
+        ProductRepositoryInterface $productRepository,
+        CatalogSession $catalogSession,
+        UrlInterface $url,
+        ManagerInterface $messageManager,
+        RequestInterface $request,
+        ResultFactory $resultFactory,
+        ConfigInterface $sendFriendConfig,
+        Session $customerSession
     ) {
-        parent::__construct($context);
         $this->_coreRegistry = $coreRegistry;
         $this->_formKeyValidator = $formKeyValidator;
         $this->sendFriend = $sendFriend;
         $this->productRepository = $productRepository;
+        $this->catalogSession = $catalogSession;
+        $this->_url = $url;
+        $this->_request = $request;
+        $this->messageManager = $messageManager;
+        $this->resultFactory = $resultFactory;
+        $this->sendFriendConfig = $sendFriendConfig;
+        $this->customerSession = $customerSession;
     }
 
     /**
@@ -65,35 +120,35 @@ abstract class Product extends \Magento\Framework\App\Action\Action
      * If allow only for customer - redirect to login page
      *
      * @param RequestInterface $request
-     * @return \Magento\Framework\App\ResponseInterface
-     * @throws \Magento\Framework\Exception\NotFoundException
+     * @return ResponseInterface
+     * @throws NotFoundException
      */
     public function dispatch(RequestInterface $request)
     {
-        /* @var $helper \Magento\SendFriend\Helper\Data */
-        $helper = $this->_objectManager->get(\Magento\SendFriend\Helper\Data::class);
-        /* @var $session \Magento\Customer\Model\Session */
-        $session = $this->_objectManager->get(\Magento\Customer\Model\Session::class);
+        /** @var ConfigInterface $sendFriendConfig */
+        $sendFriendConfig = $this->sendFriendConfig;
 
-        if (!$helper->isEnabled()) {
+        /** @var Session $session */
+        $session = $this->customerSession;
+
+        if (!$sendFriendConfig->isEnabled()) {
             throw new NotFoundException(__('Page not found.'));
         }
 
-        if (!$helper->isAllowForGuest() && !$session->authenticate()) {
-            $this->_actionFlag->set('', self::FLAG_NO_DISPATCH, true);
+        if (!$sendFriendConfig->isAllowForGuest() && !$session->authenticate()) {
             if ($this->getRequest()->getActionName() == 'sendemail') {
                 $session->setBeforeAuthUrl($this->_url->getUrl('sendfriend/product/send', ['_current' => true]));
-                $this->_objectManager->get(\Magento\Catalog\Model\Session::class)
-                    ->setSendfriendFormData($request->getPostValue());
+                $this->catalogSession->setSendfriendFormData($request->getPostValue());
             }
         }
-        return parent::dispatch($request);
+
+        return $this->execute();
     }
 
     /**
      * Initialize Product Instance
      *
-     * @return \Magento\Catalog\Model\Product
+     * @return ProductModel
      */
     protected function _initProduct()
     {
@@ -111,6 +166,17 @@ abstract class Product extends \Magento\Framework\App\Action\Action
         }
 
         $this->_coreRegistry->register('product', $product);
+
         return $product;
+    }
+
+    /**
+     * get Request
+     *
+     * @return RequestInterface
+     */
+    protected function getRequest()
+    {
+        return $this->_request;
     }
 }

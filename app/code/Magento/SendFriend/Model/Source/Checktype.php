@@ -3,26 +3,26 @@
  * Copyright © Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
+declare(strict_types=1);
+
+namespace Magento\SendFriend\Model\Source;
+
+use Magento\Framework\Data\OptionSourceInterface;
+use Magento\SendFriend\Model\ConfigInterface;
 
 /**
  * Send to a Friend Limit sending by Source
- *
- * @author      Magento Core Team <core@magentocommerce.com>
  */
-namespace Magento\SendFriend\Model\Source;
-
-class Checktype implements \Magento\Framework\Option\ArrayInterface
+class Checktype implements OptionSourceInterface
 {
     /**
      * Retrieve Check Type Option array
-     *
-     * @return array
      */
-    public function toOptionArray()
+    public function toOptionArray(): array
     {
         return [
-            ['value' => \Magento\SendFriend\Helper\Data::CHECK_IP, 'label' => __('IP Address')],
-            ['value' => \Magento\SendFriend\Helper\Data::CHECK_COOKIE, 'label' => __('Cookie (unsafe)')]
+            ['value' => ConfigInterface::CHECK_IP, 'label' => __('IP Address')],
+            ['value' => ConfigInterface::CHECK_COOKIE, 'label' => __('Cookie (unsafe)')]
         ];
     }
 }

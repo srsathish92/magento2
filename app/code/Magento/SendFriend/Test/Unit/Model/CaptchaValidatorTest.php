@@ -3,7 +3,6 @@
  * Copyright © Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
-
 declare(strict_types=1);
 
 namespace Magento\SendFriend\Test\Unit\Model;
@@ -18,8 +17,8 @@ use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\TestFramework\Unit\Helper\ObjectManager;
 use Magento\SendFriend\Model\CaptchaValidator;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
-use PHPUnit_Framework_MockObject_MockObject;
 
 /**
  * Test CaptchaValidatorTest
@@ -34,39 +33,39 @@ class CaptchaValidatorTest extends TestCase
     private $model;
 
     /**
-     * @var CaptchaStringResolver|PHPUnit_Framework_MockObject_MockObject
+     * @var CaptchaStringResolver|MockObject
      */
     private $captchaStringResolverMock;
 
     /**
-     * @var UserContextInterface|PHPUnit_Framework_MockObject_MockObject
+     * @var UserContextInterface|MockObject
      */
     private $currentUserMock;
 
     /**
-     * @var CustomerRepositoryInterface|PHPUnit_Framework_MockObject_MockObject
+     * @var CustomerRepositoryInterface|MockObject
      */
     private $customerRepositoryMock;
 
     /**
-     * @var Data|PHPUnit_Framework_MockObject_MockObject
+     * @var Data|MockObject
      */
     private $captchaHelperMock;
 
     /**
-     * @var DefaultModel|PHPUnit_Framework_MockObject_MockObject
+     * @var DefaultModel|MockObject
      */
     private $captchaMock;
 
     /**
-     * @var RequestInterface|PHPUnit_Framework_MockObject_MockObject
+     * @var RequestInterface|MockObject
      */
     private $requestMock;
 
     /**
      * Set Up
      */
-    protected function setUp()
+    protected function setUp(): void
     {
         $objectManager = new ObjectManager($this);
 
@@ -110,7 +109,7 @@ class CaptchaValidatorTest extends TestCase
 
         if ($captchaIsRequired) {
             $this->captchaStringResolverMock->expects($this->once())->method('resolve')
-                ->with($this->requestMock, static::FORM_ID)->will($this->returnValue($word));
+                ->with($this->requestMock, self::FORM_ID)->will($this->returnValue($word));
             $this->captchaMock->expects($this->once())->method('isCorrect')->with($word)
                 ->will($this->returnValue($captchaWordIsValid));
         }
@@ -120,12 +119,11 @@ class CaptchaValidatorTest extends TestCase
 
     /**
      * Testing the wrong used word for captcha
-     *
-     * @expectedException \Magento\Framework\Exception\LocalizedException
-     * @expectedExceptionMessage  Incorrect CAPTCHA
      */
     public function testWrongCaptcha()
     {
+        $this->expectException(LocalizedException::class);
+        $this->expectExceptionMessage('Incorrect CAPTCHA');
         $word = 'test-word';
         $captchaIsRequired = true;
         $captchaWordIsCorrect = false;
@@ -134,7 +132,7 @@ class CaptchaValidatorTest extends TestCase
         $this->captchaMock->expects($this->once())->method('isRequired')
             ->will($this->returnValue($captchaIsRequired));
         $this->captchaStringResolverMock->expects($this->any())->method('resolve')
-            ->with($this->requestMock, static::FORM_ID)->will($this->returnValue($word));
+            ->with($this->requestMock, self::FORM_ID)->will($this->returnValue($word));
         $this->captchaMock->expects($this->any())->method('isCorrect')->with($word)
             ->will($this->returnValue($captchaWordIsCorrect));
 

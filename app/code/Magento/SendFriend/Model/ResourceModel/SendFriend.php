@@ -3,17 +3,20 @@
  * Copyright © Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
-namespace Magento\SendFriend\Model\ResourceModel;
+declare(strict_types=1);
+
+ namespace Magento\SendFriend\Model\ResourceModel;
+
+use Magento\Framework\Model\ResourceModel\Db\AbstractDb;
+use Magento\SendFriend\Model\SendFriend as SendFriendModel;
 
 /**
  * SendFriend Log Resource Model
  *
- * @author      Magento Core Team <core@magentocommerce.com>
- *
  * @api
  * @since 100.0.2
  */
-class SendFriend extends \Magento\Framework\Model\ResourceModel\Db\AbstractDb
+class SendFriend extends AbstractDb
 {
     /**
      * Initialize connection and table
@@ -28,7 +31,7 @@ class SendFriend extends \Magento\Framework\Model\ResourceModel\Db\AbstractDb
     /**
      * Retrieve Sended Emails By Ip
      *
-     * @param \Magento\SendFriend\Model\SendFriend $object
+     * @param SendFriendModel $object
      * @param int $ip
      * @param int $startTime
      * @param int $websiteId

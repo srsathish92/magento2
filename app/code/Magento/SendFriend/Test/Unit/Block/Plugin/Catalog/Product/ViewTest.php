@@ -3,38 +3,44 @@
  * Copyright © Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
+declare(strict_types=1);
 
 namespace Magento\SendFriend\Test\Unit\Block\Plugin\Catalog\Product;
 
+use Magento\Catalog\Block\Product\View as ProductBlockView;
 use Magento\Framework\TestFramework\Unit\Helper\ObjectManager as ObjectManagerHelper;
+use Magento\SendFriend\Block\Plugin\Catalog\Product\View;
+use Magento\SendFriend\Model\SendFriend;
+use PHPUnit\Framework\MockObject\MockObject;
+use PHPUnit\Framework\TestCase;
 
-class ViewTest extends \PHPUnit\Framework\TestCase
+class ViewTest extends TestCase
 {
-    /** @var \Magento\SendFriend\Block\Plugin\Catalog\Product\View */
+    /** @var View */
     protected $view;
 
     /** @var ObjectManagerHelper */
     protected $objectManagerHelper;
 
-    /** @var \Magento\SendFriend\Model\SendFriend|\PHPUnit_Framework_MockObject_MockObject */
-    protected $sendfriendModel;
+    /** @var SendFriend|MockObject */
+    protected $sendfriendModelMock;
 
-    /** @var \Magento\Catalog\Block\Product\View|\PHPUnit_Framework_MockObject_MockObject */
-    protected $productView;
+    /** @var ProductBlockView|MockObject */
+    protected $productViewMock;
 
-    protected function setUp()
+    protected function setUp(): void
     {
-        $this->sendfriendModel = $this->createPartialMock(
-            \Magento\SendFriend\Model\SendFriend::class,
+        $this->sendfriendModelMock = $this->createPartialMock(
+            SendFriend::class,
             ['__wakeup', 'canEmailToFriend']
         );
-        $this->productView = $this->createMock(\Magento\Catalog\Block\Product\View::class);
+        $this->productViewMock = $this->createMock(ProductBlockView::class);
 
         $this->objectManagerHelper = new ObjectManagerHelper($this);
         $this->view = $this->objectManagerHelper->getObject(
-            \Magento\SendFriend\Block\Plugin\Catalog\Product\View::class,
+            View::class,
             [
-                'sendfriend' => $this->sendfriendModel
+                'sendfriend' => $this->sendfriendModelMock
             ]
         );
     }
@@ -44,18 +50,20 @@ class ViewTest extends \PHPUnit\Framework\TestCase
      * @param bool $result
      * @param string $callSendfriend
      */
-    public function testAfterCanEmailToFriend($result, $callSendfriend)
+    public function testAfterCanEmailToFriend($result, $callSendfriend): void
     {
-        $this->sendfriendModel->expects($this->$callSendfriend())->method('canEmailToFriend')
+        $this->sendfriendModelMock->expects($this->$callSendfriend())->method('canEmailToFriend')
             ->will($this->returnValue(true));
 
-        $this->assertTrue($this->view->afterCanEmailToFriend($this->productView, $result));
+        $this->assertTrue($this->view->afterCanEmailToFriend($this->productViewMock, $result));
     }
 
     /**
+     * Dataprovide for testAfterCanEmailToFriend
+     *
      * @return array
      */
-    public function afterCanEmailToFriendDataSet()
+    public function afterCanEmailToFriendDataSet(): array
     {
         return [
             [true, 'never'],

@@ -10,7 +10,7 @@ namespace Magento\SendFriendGraphQl\Model\Resolver;
 use Magento\Framework\GraphQl\Config\Element\Field;
 use Magento\Framework\GraphQl\Query\ResolverInterface;
 use Magento\Framework\GraphQl\Schema\Type\ResolveInfo;
-use Magento\SendFriend\Helper\Data as SendFriendHelper;
+use Magento\SendFriend\Model\ConfigInterface;
 
 /**
  * Resolve Store Config information for SendFriend
@@ -18,16 +18,16 @@ use Magento\SendFriend\Helper\Data as SendFriendHelper;
 class SendFriendConfiguration implements ResolverInterface
 {
     /**
-     * @var SendFriendHelper
+     * @var ConfigInterface
      */
-    private $sendFriendHelper;
+    private $sendFriendConfig;
 
     /**
-     * @param SendFriendHelper $sendFriendHelper
+     * @param ConfigInterface $sendFriendConfig
      */
-    public function __construct(SendFriendHelper $sendFriendHelper)
+    public function __construct(ConfigInterface $sendFriendConfig)
     {
-        $this->sendFriendHelper = $sendFriendHelper;
+        $this->sendFriendConfig = $sendFriendConfig;
     }
 
     /**
@@ -39,8 +39,8 @@ class SendFriendConfiguration implements ResolverInterface
         $storeId = $store->getId();
 
         return [
-            'enabled_for_customers' => $this->sendFriendHelper->isEnabled($storeId),
-            'enabled_for_guests' => $this->sendFriendHelper->isAllowForGuest($storeId)
+            'enabled_for_customers' => $this->sendFriendConfig->isEnabled($storeId),
+            'enabled_for_guests' => $this->sendFriendConfig->isAllowForGuest($storeId)
         ];
     }
 }

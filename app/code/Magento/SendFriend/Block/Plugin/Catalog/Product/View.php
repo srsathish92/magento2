@@ -3,32 +3,39 @@
  * Copyright © Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
+declare(strict_types=1);
 
 namespace Magento\SendFriend\Block\Plugin\Catalog\Product;
 
+use Magento\Catalog\Block\Product\View as ProductView;
+use Magento\SendFriend\Model\SendFriend;
+
+/**
+ * Plugin for catalog product view
+ */
 class View
 {
     /**
-     * @var \Magento\SendFriend\Model\SendFriend
+     * @var SendFriend
      */
     protected $_sendfriend;
 
     /**
-     * @param \Magento\SendFriend\Model\SendFriend $sendfriend
+     * @param SendFriend $sendfriend
      */
     public function __construct(
-        \Magento\SendFriend\Model\SendFriend $sendfriend
+        SendFriend $sendfriend
     ) {
         $this->_sendfriend = $sendfriend;
     }
 
     /**
-     * @param \Magento\Catalog\Block\Product\View $subject
+     * @param ProductView $subject
      * @param bool $result
      * @return bool
      * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      */
-    public function afterCanEmailToFriend(\Magento\Catalog\Block\Product\View $subject, $result)
+    public function afterCanEmailToFriend(ProductView $subject, $result)
     {
         if (!$result) {
             $result = $this->_sendfriend->canEmailToFriend();
