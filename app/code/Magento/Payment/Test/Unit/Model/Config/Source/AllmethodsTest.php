@@ -3,6 +3,7 @@
  * Copyright © Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
+
 declare(strict_types=1);
 
 namespace Magento\Payment\Test\Unit\Model\Config\Source;
@@ -19,29 +20,42 @@ class AllmethodsTest extends TestCase
      *
      * @var Data|MockObject
      */
-    protected $_paymentData;
+    protected $_paymentDataMock;
 
     /**
      * @var Allmethods
      */
     protected $_model;
 
+    /**
+     * @inheritDoc
+     */
     protected function setUp(): void
     {
-        $this->_paymentData = $this->getMockBuilder(
-            Data::class
-        )->disableOriginalConstructor()
-            ->setMethods([])->getMock();
+        $this->_paymentDataMock = $this->getMockBuilder(Data::class)
+            ->disableOriginalConstructor()
+            ->onlyMethods(['getPaymentMethodList'])
+            ->getMock();
 
-        $this->_model = new Allmethods($this->_paymentData);
+        $this->_model = new Allmethods($this->_paymentDataMock);
     }
 
-    public function testToOptionArray()
+    /**
+     * Test toOptionArray()
+     *
+     * @return void
+     */
+    public function testToOptionArray(): void
     {
-        $expectedArray = ['key' => 'value'];
-        $this->_paymentData->expects($this->once())
+        $expectedArray = [
+            'payment_code' => [
+                'value' => 'payment_code',
+                'label' => 'Payment Label'
+            ]
+        ];
+        $this->_paymentDataMock->expects($this->once())
             ->method('getPaymentMethodList')
-            ->with(true, true, true)
+            ->with(true, true, false)
             ->willReturn($expectedArray);
         $this->assertEquals($expectedArray, $this->_model->toOptionArray());
     }
